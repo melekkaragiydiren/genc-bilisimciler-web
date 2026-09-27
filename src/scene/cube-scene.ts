@@ -38,8 +38,8 @@ type Stage = {
 };
 
 const STAGES: Stage[] = [
-  { desk: [0.46, 0.02], mob: [0, 0.46], dolly: 1, board: 0.8, netLines: 0, graphLines: 0, core: 0, dust: 0.45, spin: 0.16, scale: 1 },
-  { desk: [-0.46, 0.02], mob: [0, 0.5], dolly: 0.92, board: 0.7, netLines: 0, graphLines: 0, core: 0.45, dust: 0.6, spin: 0.1, scale: 1 },
+  { desk: [0.58, 0.02], mob: [0, 0.46], dolly: 1, board: 0.6, netLines: 0, graphLines: 0, core: 0, dust: 0.45, spin: 0.16, scale: 0.88 },
+  { desk: [-0.56, 0.02], mob: [0, 0.5], dolly: 0.92, board: 0.3, netLines: 0, graphLines: 0, core: 0.45, dust: 0.6, spin: 0.1, scale: 0.8 },
   { desk: [0, 0], mob: [0, 0.05], dolly: 0.34, board: 0, netLines: 0, graphLines: 0, core: 1, dust: 1, spin: 0.07, scale: 1 },
   { desk: [0, 0], mob: [0, 0.1], dolly: 1.05, board: 0, netLines: 0.55, graphLines: 0, core: 0.6, dust: 0.9, spin: 0.06, scale: 1 },
   { desk: [0.44, 0], mob: [0, 0.66], dolly: 1.08, board: 0.15, netLines: 0.08, graphLines: 0.75, core: 0.85, dust: 0.8, spin: 0.09, scale: 0.7 },

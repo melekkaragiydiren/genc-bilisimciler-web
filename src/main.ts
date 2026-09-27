@@ -1,5 +1,6 @@
 import './styles/main.css';
 import { reachSection, startVisit, track } from './analytics';
+import { deviceId } from './device-id';
 import { getLang, initI18n, onLangChange, t, topicLabel } from './i18n';
 import { LIMITS, TOPICS } from './shared/topics';
 import type { CubeScene } from './scene/cube-scene';
@@ -160,6 +161,7 @@ form.addEventListener('submit', async (e) => {
         message: text,
         name: String(data.get('name') ?? ''),
         website: String(data.get('website') ?? ''),
+        device: deviceId(),
       }),
     });
     if (!res.ok) throw new Error(t(res.status === 429 ? 'form.rateLimited' : 'form.failed'));

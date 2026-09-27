@@ -201,7 +201,7 @@ main {
 }
 
 .panel--left::before {
-  background: linear-gradient(90deg, rgba(6, 7, 8, 0.75), rgba(6, 7, 8, 0) 60%);
+  background: linear-gradient(90deg, rgba(6, 7, 8, 0.92), rgba(6, 7, 8, 0.8) 38%, rgba(6, 7, 8, 0) 68%);
 }
 
 .panel--right {
@@ -209,7 +209,7 @@ main {
 }
 
 .panel--right::before {
-  background: linear-gradient(270deg, rgba(6, 7, 8, 0.75), rgba(6, 7, 8, 0) 60%);
+  background: linear-gradient(270deg, rgba(6, 7, 8, 0.92), rgba(6, 7, 8, 0.8) 38%, rgba(6, 7, 8, 0) 68%);
 }
 
 .panel--center {
@@ -319,7 +319,7 @@ main {
 
 .note {
   margin: 22px 0 0;
-  color: var(--muted);
+  color: var(--ink-2);
   font-size: 14px;
 }
 
@@ -776,7 +776,7 @@ main {
   .panel--left::before,
   .panel--right::before,
   .panel--bottom::before {
-    background: linear-gradient(0deg, rgba(6, 7, 8, 0.95) 20%, rgba(6, 7, 8, 0) 62%);
+    background: linear-gradient(0deg, rgba(6, 7, 8, 0.94) 50%, rgba(6, 7, 8, 0) 72%);
   }
 
   .panel--form::before {

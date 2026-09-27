@@ -9,18 +9,14 @@
  *   "Üye Ol" / sosyal medya tıklaması, öneri gönderip göndermediği.
  */
 
+import { randomId } from './device-id';
+
 export type TrackEvent = 'join' | 'linkedin' | 'instagram' | 'suggest';
 
 const SESSION_KEY = 'gbt-visit';
 let visitId: string | null = null;
 let maxSection = -1;
 const sent = new Set<TrackEvent>();
-
-function randomId(): string {
-  // crypto.randomUUID yalnızca HTTPS'te var; getRandomValues her yerde çalışır
-  const bytes = crypto.getRandomValues(new Uint8Array(16));
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-}
 
 function send(path: string, body: object) {
   fetch(path, {

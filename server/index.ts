@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import express from 'express';
@@ -9,10 +10,18 @@ import { rateLimit } from './rate-limit.ts';
 const PORT = Number(process.env.PORT ?? 3001);
 const DIST_DIR = resolve(import.meta.dirname, '../dist');
 const MEMBERSHIP_URL_KEY = 'membershipUrl';
-// IP başına 10 dakikalık limitler. Stantta herkes aynı kampüs Wi-Fi'ı (tek IP) üzerinden
-// gelebildiği için cömert tutuldu; gerekirse .env'den değiştirilebilir.
-const SUGGESTION_LIMIT = Number(process.env.RATE_LIMIT_SUGGESTIONS ?? 40);
-const VISIT_LIMIT = Number(process.env.RATE_LIMIT_VISITS ?? 600);
+
+// 10 dakikalık limitler. Okul/kampüs Wi-Fi'ında yüzlerce kişi TEK IP'den gelir (ör. sunumda QR
+// perdeye yansıtıldığında). Bu yüzden asıl sınır CİHAZ başınadır (tarayıcının rastgele kimliği);
+// IP limiti yalnızca tek kaynaktan gelen sele karşı yüksek bir tavandır. .env'den değiştirilebilir.
+const WINDOW_MS = 10 * 60_000;
+const SUGGESTIONS_PER_DEVICE = Number(process.env.RATE_LIMIT_SUGGESTIONS_PER_DEVICE ?? 5);
+const SUGGESTIONS_PER_IP = Number(process.env.RATE_LIMIT_SUGGESTIONS ?? 300);
+const VISIT_REQUESTS_PER_DEVICE = Number(process.env.RATE_LIMIT_VISITS_PER_DEVICE ?? 60);
+const VISIT_REQUESTS_PER_IP = Number(process.env.RATE_LIMIT_VISITS ?? 5000);
+// Bu uzunluktan uzun, aynı IP'den birebir aynı metin pencere içinde tekrar gelirse sessizce yok sayılır
+// (kopyala-yapıştır spam). Kısa ifadeleri ("hackathon olsun") farklı kişiler de yazabileceği için dokunulmaz.
+const DUPLICATE_MIN_LENGTH = 20;
 const VISIT_ID = /^[0-9a-f]{32}$/;
 const SOURCE = /^[a-z0-9-]{1,24}$/;
 
@@ -64,9 +73,41 @@ app.get('/api/config', (_req, res) => {
   res.json({ membershipUrl: store.getSetting(MEMBERSHIP_URL_KEY) ?? '' });
 });
 
+const deviceOf = (req: express.Request): string | null => {
+  const id = (req.body as Record<string, unknown> | undefined)?.device;
+  return typeof id === 'string' && VISIT_ID.test(id) ? id : null;
+};
+
+const recentMessages = new Map<string, number>();
+setInterval(() => {
+  const cutoff = Date.now() - WINDOW_MS;
+  for (const [k, at] of recentMessages) if (at < cutoff) recentMessages.delete(k);
+}, WINDOW_MS).unref();
+
+/** Aynı IP'den aynı uzun metin yakın zamanda geldiyse true (ve kaydı tazeler). */
+function isDuplicate(ip: string, message: string): boolean {
+  if (message.length < DUPLICATE_MIN_LENGTH) return false;
+  const normalized = message.toLocaleLowerCase('tr').replace(/\s+/g, ' ');
+  const key = createHash('sha256').update(`${ip}\n${normalized}`).digest('base64url');
+  const seen = recentMessages.get(key);
+  recentMessages.set(key, Date.now());
+  return seen !== undefined && Date.now() - seen < WINDOW_MS;
+}
+
 app.post(
   '/api/suggestions',
-  rateLimit({ windowMs: 10 * 60_000, max: SUGGESTION_LIMIT, message: 'Çok fazla gönderim yaptınız, biraz sonra tekrar deneyin.' }),
+  rateLimit({
+    windowMs: WINDOW_MS,
+    max: SUGGESTIONS_PER_IP,
+    message: 'Bu ağdan çok fazla gönderim yapıldı, biraz sonra tekrar deneyin.',
+  }),
+  rateLimit({
+    windowMs: WINDOW_MS,
+    max: SUGGESTIONS_PER_DEVICE,
+    message: 'Kısa sürede çok fazla gönderim yaptınız, biraz sonra tekrar deneyin.',
+    // Cihaz kimliği göndermeyen istemciler (el yapımı betikler) IP'leriyle aynı küçük limite tabi olur
+    key: (req) => deviceOf(req) ?? `ip:${req.ip}`,
+  }),
   (req, res) => {
     const body = (req.body ?? {}) as Record<string, unknown>;
 
@@ -91,15 +132,27 @@ app.post(
       return;
     }
 
-    store.addSuggestion(name || null, topics, message);
+    // Kopya spam'e de başarı dönülür: gönderen fark etmez, veritabanı kirlenmez
+    if (!isDuplicate(req.ip ?? '', message)) store.addSuggestion(name || null, topics, message);
     res.status(201).json({ ok: true });
   },
 );
 
 // Ziyaret sayacı (kişisel veri yok: rastgele sekme kimliği, IP saklanmaz)
-const visitLimiter = rateLimit({ windowMs: 10 * 60_000, max: VISIT_LIMIT, message: 'Çok fazla istek.' });
+const visitLimiters = [
+  rateLimit({ windowMs: WINDOW_MS, max: VISIT_REQUESTS_PER_IP, message: 'Çok fazla istek.' }),
+  rateLimit({
+    windowMs: WINDOW_MS,
+    max: VISIT_REQUESTS_PER_DEVICE,
+    message: 'Çok fazla istek.',
+    key: (req) => {
+      const id = req.params.id ?? (req.body as Record<string, unknown> | undefined)?.id;
+      return typeof id === 'string' && VISIT_ID.test(id) ? `v:${id}` : null;
+    },
+  }),
+];
 
-app.post('/api/visits', visitLimiter, (req, res) => {
+app.post('/api/visits', ...visitLimiters, (req, res) => {
   const body = (req.body ?? {}) as Record<string, unknown>;
   if (typeof body.id !== 'string' || !VISIT_ID.test(body.id)) {
     res.status(400).json({ error: 'Geçersiz istek.' });
@@ -112,7 +165,7 @@ app.post('/api/visits', visitLimiter, (req, res) => {
   res.status(204).end();
 });
 
-app.post('/api/visits/:id', visitLimiter, (req, res) => {
+app.post('/api/visits/:id', ...visitLimiters, (req, res) => {
   const id = String(req.params.id);
   const body = (req.body ?? {}) as Record<string, unknown>;
   if (!VISIT_ID.test(id)) {
