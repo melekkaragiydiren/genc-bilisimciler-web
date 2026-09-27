@@ -8,6 +8,9 @@ import { SECTION_COUNT, VISIT_EVENTS, openStore, type VisitEvent } from './db.ts
 import { rateLimit } from './rate-limit.ts';
 
 const PORT = Number(process.env.PORT ?? 3001);
+// Varsayılan yalnızca bu bilgisayar: ortak Wi-Fi'da (yurt, kampüs) geliştirme sunucusu dışarıya açılmasın.
+// Docker/sunucuda HOST=0.0.0.0 verilir (Dockerfile'da ayarlı).
+const HOST = process.env.HOST ?? '127.0.0.1';
 const DIST_DIR = resolve(import.meta.dirname, '../dist');
 const MEMBERSHIP_URL_KEY = 'membershipUrl';
 
@@ -38,9 +41,14 @@ const auth = createAuth(adminPassword, process.env.SESSION_SECRET);
 
 const app = express();
 app.disable('x-powered-by');
-if (process.env.TRUST_PROXY === '1') app.set('trust proxy', 1);
+// Önündeki reverse proxy sayısı (Caddy = 1, Cloudflare + Caddy = 2). Yanlış ayar, IP limitlerini bozar.
+const trustProxy = Number(process.env.TRUST_PROXY ?? 0);
+if (trustProxy > 0) app.set('trust proxy', trustProxy);
 
-app.use((_req, res, next) => {
+app.use((req, res, next) => {
+  if (req.secure) res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -49,8 +57,8 @@ app.use((_req, res, next) => {
     [
       "default-src 'self'",
       "script-src 'self'",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
+      "style-src 'self' 'unsafe-inline'",
+      "font-src 'self'",
       "img-src 'self' data: blob:",
       "connect-src 'self'",
       "frame-ancestors 'none'",
@@ -201,8 +209,8 @@ app.post(
   },
 );
 
-app.post('/api/admin/logout', (_req, res) => {
-  auth.endSession(res);
+app.post('/api/admin/logout', (req, res) => {
+  auth.endSession(req, res);
   res.json({ ok: true });
 });
 
@@ -286,6 +294,17 @@ if (existsSync(DIST_DIR)) {
   app.use(express.static(DIST_DIR, { maxAge: '1h' }));
 }
 
-app.listen(PORT, () => {
-  console.log(`GBT sunucusu http://localhost:${PORT} adresinde çalışıyor`);
+// Hata yanıtları teknik ayrıntı (dosya yolu, kod satırı) içermez; ayrıntı yalnızca sunucu günlüğüne yazılır.
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const status = (err as { status?: number }).status;
+  if (typeof status === 'number' && status >= 400 && status < 500) {
+    res.status(status).json({ error: 'Geçersiz istek.' });
+    return;
+  }
+  console.error(err);
+  res.status(500).json({ error: 'Sunucu hatası.' });
+});
+
+app.listen(PORT, HOST, () => {
+  console.log(`GBT sunucusu http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT} adresinde çalışıyor`);
 });

@@ -7,20 +7,30 @@ const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 export function createAuth(adminPassword: string | undefined, sessionSecret: string | undefined) {
   const secret = sessionSecret || randomBytes(32).toString('hex');
   const passwordDigest = adminPassword ? sha256(adminPassword) : null;
+  // Çıkış yapılan oturumlar süreleri dolana kadar burada tutulur; çalınmış bir çerez çıkıştan sonra işe yaramaz
+  const revoked = new Map<string, number>();
+
+  setInterval(() => {
+    const now = Date.now();
+    for (const [nonce, expiry] of revoked) if (expiry < now) revoked.delete(nonce);
+  }, 60 * 60 * 1000).unref();
 
   const sign = (payload: string) => createHmac('sha256', secret).update(payload).digest('base64url');
 
   function issueToken(): string {
-    const payload = String(Date.now() + SESSION_TTL_MS);
+    const payload = `${Date.now() + SESSION_TTL_MS}.${randomBytes(12).toString('base64url')}`;
     return `${payload}.${sign(payload)}`;
   }
 
-  function verifyToken(token: string | undefined): boolean {
-    if (!token) return false;
-    const [payload, signature] = token.split('.');
-    if (!payload || !signature) return false;
-    if (!safeEqual(Buffer.from(signature), Buffer.from(sign(payload)))) return false;
-    return Number(payload) > Date.now();
+  /** Geçerliyse { expiry, nonce } döner */
+  function parseToken(token: string | undefined) {
+    if (!token) return null;
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const [expiry, nonce, signature] = parts;
+    if (!safeEqual(Buffer.from(signature), Buffer.from(sign(`${expiry}.${nonce}`)))) return null;
+    if (!(Number(expiry) > Date.now()) || revoked.has(nonce)) return null;
+    return { expiry: Number(expiry), nonce };
   }
 
   return {
@@ -41,16 +51,18 @@ export function createAuth(adminPassword: string | undefined, sessionSecret: str
       });
     },
 
-    endSession(res: Response) {
+    endSession(req: Request, res: Response) {
+      const session = parseToken(readCookie(req, SESSION_COOKIE));
+      if (session) revoked.set(session.nonce, session.expiry);
       res.clearCookie(SESSION_COOKIE, { path: '/api/admin' });
     },
 
     isAuthenticated(req: Request): boolean {
-      return verifyToken(readCookie(req, SESSION_COOKIE));
+      return parseToken(readCookie(req, SESSION_COOKIE)) !== null;
     },
 
     requireAdmin(req: Request, res: Response, next: NextFunction) {
-      if (verifyToken(readCookie(req, SESSION_COOKIE))) return next();
+      if (parseToken(readCookie(req, SESSION_COOKIE))) return next();
       res.status(401).json({ error: 'Oturum gerekli.' });
     },
   };
@@ -70,7 +82,11 @@ function readCookie(req: Request, name: string): string | undefined {
   for (const part of header.split(';')) {
     const eq = part.indexOf('=');
     if (eq !== -1 && part.slice(0, eq).trim() === name) {
-      return decodeURIComponent(part.slice(eq + 1).trim());
+      try {
+        return decodeURIComponent(part.slice(eq + 1).trim());
+      } catch {
+        return undefined; // bozuk kodlanmış çerez: oturum yok say
+      }
     }
   }
   return undefined;

@@ -6,9 +6,6 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>GBT Stant Afişi</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
     <script type="module" src="/src/poster.ts"></script>
   </head>
   <body>
@@ -17,14 +14,12 @@
         <strong>Stant afişi (A4)</strong>
         <span>Yazdırma ekranında kağıt boyutu A4, kenar boşluğu “Yok”, “Arka plan grafikleri” açık olsun.</span>
       </div>
-      <button type="button" id="print">Yazdır / PDF kaydet</button>
+      <button type="button" id="print" disabled>Yazdır / PDF kaydet</button>
     </div>
 
-    <p id="error" class="error" hidden>
-      Geçersiz adres. Afişi admin panelindeki “A4 afişi aç ve yazdır” düğmesiyle açın.
-    </p>
+    <p id="error" class="error" role="alert" hidden></p>
 
-    <article class="sheet" id="sheet">
+    <article class="sheet" id="sheet" hidden>
       <div class="hero" role="img" aria-label="Genç Bilişimciler Topluluğu küp görseli"></div>
 
       <div class="body">

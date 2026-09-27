@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Yeni yayınlanan CVE'leri yakalamak için her pazartesi 09:00 (TR) tekrar tarar
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -34,4 +38,11 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3001/api/suggestions \
             -H 'Content-Type: application/json' -d '{"topics":["Hackathon"]}')" = 201
       - if: failure()
-        run: docker logs gbt
+        run: docker logs gbt || true
+
+      - name: CVE taraması — tüm bulgular (bilgi amaçlı)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --scanners vuln --no-progress gbt-web
+      - name: CVE taraması — düzeltmesi olan YÜKSEK/KRİTİK açık varsa başarısız ol
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --scanners vuln --no-progress --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 gbt-web

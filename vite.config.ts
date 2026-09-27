@@ -3,8 +3,9 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   server: {
-    host: true,
-    proxy: { '/api': 'http://localhost:3001' },
+    // Varsayılan yalnızca bu bilgisayar. Telefondan denemek için: npm run dev:lan
+    // (ortak/herkese açık Wi-Fi'da açık bırakmayın; aynı ağdaki herkes erişebilir)
+    proxy: { '/api': 'http://127.0.0.1:3001' },
   },
   build: {
     chunkSizeWarningLimit: 700,

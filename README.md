@@ -30,7 +30,9 @@ cp .env.example .env     # ADMIN_PASSWORD'ü değiştirin
 npm run dev              # http://localhost:5173  (API: 3001)
 ```
 
-Aynı Wi-Fi'daki telefondan denemek için Vite'ın yazdığı `Network:` adresini açın.
+Geliştirme sunucusu varsayılan olarak **yalnızca bu bilgisayara** açıktır. Aynı Wi-Fi'daki telefondan
+denemek için `npm run dev:lan` kullanın ve Vite'ın yazdığı `Network:` adresini açın. Yurt/kampüs gibi
+ortak ağlarda `dev:lan`'ı açık bırakmayın: aynı ağdaki herkes erişebilir.
 
 Production:
 
@@ -99,11 +101,20 @@ gbt.ornek.edu.tr {
 }
 ```
 
-Proxy arkasında `TRUST_PROXY=1` olmalı (rate limit gerçek IP'yi görsün, çerezler `Secure` olsun).
+Proxy arkasında `TRUST_PROXY` önündeki proxy sayısı olmalı: yalnızca Caddy/nginx → `1`,
+Cloudflare + Caddy → `2`. Yanlış ayarda limitler herkesi tek IP sanar ve çerezler `Secure` olmaz.
 
 ## Güvenlik notları
 
-- Admin oturumu HMAC imzalı, `HttpOnly` + `SameSite=Strict` çerez; 12 saat geçerli.
+- Admin oturumu HMAC imzalı, `HttpOnly` + `SameSite=Strict` çerez; 12 saat geçerli. Çıkış yapılınca
+  oturum sunucuda da geçersiz olur (çalınmış bir çerez çıkıştan sonra işe yaramaz).
+- Hata yanıtları teknik ayrıntı (dosya yolu, kod satırı) içermez.
+- Sunucu varsayılan olarak yalnızca `127.0.0.1`'i dinler; Docker'da `HOST=0.0.0.0`.
+- Yazı tipleri kendi sunucumuzdan verilir; site hiçbir dış sunucuya istek atmaz (ziyaretçi IP'si Google'a gitmez).
+- Stant afişi yalnızca giriş yapmış admin için üretilir.
+- **CVE taraması:** CI her push'ta ve her pazartesi Docker imajını Trivy ile tarar; düzeltmesi yayınlanmış
+  YÜKSEK/KRİTİK bir açık varsa kontrol kırmızıya döner ve GitHub e-posta gönderir. `npm audit` ile
+  paketler ayrıca kontrol edilebilir.
 - Giriş denemeleri IP başına 15 dakikada 10 ile sınırlı.
 - **Öneri limiti cihaz başınadır** (10 dakikada 5), çünkü okul Wi-Fi'ında yüzlerce kişi tek IP'yi paylaşır.
   IP başına limit yalnızca sele karşı yüksek bir tavandır (300). Cihaz kimliği rastgeledir, yalnızca bu limit
