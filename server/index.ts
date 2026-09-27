@@ -3,12 +3,18 @@ import { resolve } from 'node:path';
 import express from 'express';
 import { LIMITS, TOPICS } from '../src/shared/topics.ts';
 import { createAuth } from './auth.ts';
-import { openStore } from './db.ts';
+import { SECTION_COUNT, VISIT_EVENTS, openStore, type VisitEvent } from './db.ts';
 import { rateLimit } from './rate-limit.ts';
 
 const PORT = Number(process.env.PORT ?? 3001);
 const DIST_DIR = resolve(import.meta.dirname, '../dist');
 const MEMBERSHIP_URL_KEY = 'membershipUrl';
+// IP başına 10 dakikalık limitler. Stantta herkes aynı kampüs Wi-Fi'ı (tek IP) üzerinden
+// gelebildiği için cömert tutuldu; gerekirse .env'den değiştirilebilir.
+const SUGGESTION_LIMIT = Number(process.env.RATE_LIMIT_SUGGESTIONS ?? 40);
+const VISIT_LIMIT = Number(process.env.RATE_LIMIT_VISITS ?? 600);
+const VISIT_ID = /^[0-9a-f]{32}$/;
+const SOURCE = /^[a-z0-9-]{1,24}$/;
 
 const adminPassword = process.env.ADMIN_PASSWORD;
 if (!adminPassword) {
@@ -60,8 +66,7 @@ app.get('/api/config', (_req, res) => {
 
 app.post(
   '/api/suggestions',
-  // Stantta herkes aynı kampüs Wi-Fi'ı (tek IP) üzerinden gelebilir; limit bu yüzden cömert tutuldu.
-  rateLimit({ windowMs: 10 * 60_000, max: 40, message: 'Çok fazla gönderim yaptınız, biraz sonra tekrar deneyin.' }),
+  rateLimit({ windowMs: 10 * 60_000, max: SUGGESTION_LIMIT, message: 'Çok fazla gönderim yaptınız, biraz sonra tekrar deneyin.' }),
   (req, res) => {
     const body = (req.body ?? {}) as Record<string, unknown>;
 
@@ -90,6 +95,39 @@ app.post(
     res.status(201).json({ ok: true });
   },
 );
+
+// Ziyaret sayacı (kişisel veri yok: rastgele sekme kimliği, IP saklanmaz)
+const visitLimiter = rateLimit({ windowMs: 10 * 60_000, max: VISIT_LIMIT, message: 'Çok fazla istek.' });
+
+app.post('/api/visits', visitLimiter, (req, res) => {
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  if (typeof body.id !== 'string' || !VISIT_ID.test(body.id)) {
+    res.status(400).json({ error: 'Geçersiz istek.' });
+    return;
+  }
+  const source = typeof body.source === 'string' && SOURCE.test(body.source) ? body.source : 'direct';
+  const lang = body.lang === 'en' ? 'en' : 'tr';
+  const device = body.device === 'mobile' ? 'mobile' : 'desktop';
+  store.addVisit(body.id, source, lang, device);
+  res.status(204).end();
+});
+
+app.post('/api/visits/:id', visitLimiter, (req, res) => {
+  const id = String(req.params.id);
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  if (!VISIT_ID.test(id)) {
+    res.status(400).json({ error: 'Geçersiz istek.' });
+    return;
+  }
+  const section = body.section;
+  if (typeof section === 'number' && Number.isInteger(section) && section >= 0 && section < SECTION_COUNT) {
+    store.reachSection(id, section);
+  }
+  if (typeof body.event === 'string' && body.event in VISIT_EVENTS) {
+    store.markVisitEvent(id, body.event as VisitEvent);
+  }
+  res.status(204).end();
+});
 
 // ── Admin uçları ────────────────────────────────────────────────────
 
@@ -145,6 +183,15 @@ app.delete('/api/admin/suggestions/:id', auth.requireAdmin, (req, res) => {
     res.status(404).json({ error: 'Kayıt bulunamadı.' });
     return;
   }
+  res.json({ ok: true });
+});
+
+app.get('/api/admin/stats', auth.requireAdmin, (_req, res) => {
+  res.json(store.visitStats());
+});
+
+app.delete('/api/admin/visits', auth.requireAdmin, (_req, res) => {
+  store.clearVisits();
   res.json({ ok: true });
 });
 

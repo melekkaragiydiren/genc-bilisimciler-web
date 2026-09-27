@@ -8,6 +8,19 @@ type Suggestion = {
   message: string;
 };
 
+type VisitStats = {
+  total: number;
+  today: number;
+  mobile: number;
+  en: number;
+  sources: { source: string; count: number }[];
+  reach: number[];
+  clicks: { join: number; linkedin: number; instagram: number; suggest: number };
+};
+
+const SECTION_NAMES = ['Hoş geldiniz', 'Stand', 'Biz kimiz?', 'Misyon & vizyon', 'Öneri formu', 'Üye ol'];
+const SOURCE_NAMES: Record<string, string> = { qr: 'QR kod', direct: 'Doğrudan' };
+
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
 const loginView = $('login-view');
@@ -18,6 +31,8 @@ const searchInput = $<HTMLInputElement>('search');
 const dateFmt = new Intl.DateTimeFormat('tr-TR', { dateStyle: 'medium', timeStyle: 'short' });
 
 let suggestions: Suggestion[] = [];
+// Binlerce öneride sayfa kilitlenmesin diye liste bu kadarla sınırlı; arama ve CSV tüm kayıtlarda çalışır.
+const LIST_LIMIT = 200;
 let pollTimer: number | undefined;
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
@@ -49,11 +64,11 @@ async function showDashboard() {
   loginView.hidden = true;
   dashView.hidden = false;
   logoutBtn.hidden = false;
-  await Promise.all([loadSuggestions(), loadSettings()]);
+  await Promise.all([loadSuggestions(), loadStats(), loadSettings()]);
   window.clearInterval(pollTimer);
-  // Stand sırasında yeni öneriler kendiliğinden gelsin
+  // Stand sırasında yeni öneriler ve ziyaretler kendiliğinden gelsin
   pollTimer = window.setInterval(() => {
-    if (!document.hidden) loadSuggestions().catch(() => {});
+    if (!document.hidden) Promise.all([loadSuggestions(), loadStats()]).catch(() => {});
   }, 30_000);
 }
 
@@ -64,6 +79,10 @@ async function loadSuggestions() {
   suggestions = data.suggestions;
   renderStats();
   renderList();
+}
+
+async function loadStats() {
+  renderStatsVisits(await api<VisitStats>('/api/admin/stats'));
 }
 
 async function loadSettings() {
@@ -81,23 +100,78 @@ function renderStats() {
   const ranked = [...counts].sort((a, b) => b[1] - a[1]);
   const max = ranked[0]?.[1] ?? 1;
 
-  const bars = $('topic-bars');
-  bars.replaceChildren(
-    ...ranked.map(([topic, n]) => {
+  renderBars(
+    $('topic-bars'),
+    ranked.map(([topic, n]) => ({ label: topic, value: n, title: `${topic}: ${n} öneri` })),
+    max,
+  );
+  $('topic-empty').hidden = ranked.length > 0;
+}
+
+type BarRow = { label: string; value: number; note?: string; title?: string };
+
+/** Tek seri, tek renk yatay çubuklar; değer metin renginde, isteğe bağlı oran notu */
+function renderBars(el: HTMLElement, rows: BarRow[], max: number) {
+  el.replaceChildren(
+    ...rows.map((row) => {
       const li = document.createElement('li');
-      li.title = `${topic}: ${n} öneri`;
-      const name = Object.assign(document.createElement('span'), { className: 'name', textContent: topic });
+      li.title = row.title ?? `${row.label}: ${row.value}`;
+      const name = Object.assign(document.createElement('span'), { className: 'name', textContent: row.label });
       const track = Object.assign(document.createElement('span'), { className: 'track' });
       const fill = Object.assign(document.createElement('span'), { className: 'fill' });
       fill.style.display = 'block';
-      fill.style.width = `${(n / max) * 100}%`;
+      fill.style.width = `${max > 0 ? (row.value / max) * 100 : 0}%`;
+      if (row.value === 0) fill.style.minWidth = '0';
       track.append(fill);
-      const value = Object.assign(document.createElement('span'), { className: 'value', textContent: String(n) });
+      const value = Object.assign(document.createElement('span'), { className: 'value', textContent: String(row.value) });
+      if (row.note) value.append(Object.assign(document.createElement('small'), { textContent: row.note }));
       li.append(name, track, value);
       return li;
     }),
   );
-  $('topic-empty').hidden = ranked.length > 0;
+}
+
+const pct = (part: number, whole: number) => (whole > 0 ? `%${Math.round((part / whole) * 100)}` : '—');
+
+function renderStatsVisits(v: VisitStats) {
+  const qr = v.sources.find((s) => s.source === 'qr')?.count ?? 0;
+  const complete = v.reach[v.reach.length - 1] ?? 0;
+  $('v-total').textContent = String(v.total);
+  $('v-today').textContent = `Bugün ${v.today}`;
+  $('v-qr').textContent = String(qr);
+  $('v-qr-share').textContent = `Ziyaretlerin ${pct(qr, v.total)}’i`;
+  $('v-complete').textContent = String(complete);
+  $('v-complete-share').textContent = `Ziyaretlerin ${pct(complete, v.total)}’i`;
+  $('v-mobile').textContent = String(v.mobile);
+  $('v-mobile-share').textContent = `Ziyaretlerin ${pct(v.mobile, v.total)}’i`;
+
+  renderBars(
+    $('funnel'),
+    v.reach.map((n, i) => ({
+      label: `${i + 1}. ${SECTION_NAMES[i]}`,
+      value: n,
+      note: pct(n, v.total),
+      title: `${SECTION_NAMES[i]} bölümüne ulaşan: ${n} (${pct(n, v.total)})`,
+    })),
+    v.total,
+  );
+
+  const clicks = [
+    { label: 'Öneri gönderdi', value: v.clicks.suggest },
+    { label: 'Üye Ol', value: v.clicks.join },
+    { label: 'LinkedIn', value: v.clicks.linkedin },
+    { label: 'Instagram', value: v.clicks.instagram },
+  ];
+  renderBars(
+    $('clicks'),
+    clicks.map((c) => ({ ...c, note: pct(c.value, v.total) })),
+    Math.max(1, ...clicks.map((c) => c.value)),
+  );
+
+  $('v-lang').textContent = v.total ? `Türkçe ${v.total - v.en} · İngilizce ${v.en}` : '—';
+  $('v-sources').textContent = v.sources.length
+    ? v.sources.map((s) => `${SOURCE_NAMES[s.source] ?? s.source} ${s.count}`).join(' · ')
+    : '—';
 }
 
 function renderList() {
@@ -109,8 +183,11 @@ function renderList() {
     : suggestions;
 
   $('list-empty').hidden = suggestions.length > 0;
+  const more = $('list-more');
+  more.hidden = visible.length <= LIST_LIMIT;
+  more.textContent = `${visible.length} sonuçtan en yeni ${LIST_LIMIT} tanesi gösteriliyor. Daraltmak için arayın ya da tümü için CSV indirin.`;
   listEl.replaceChildren(
-    ...visible.map((s) => {
+    ...visible.slice(0, LIST_LIMIT).map((s) => {
       const li = document.createElement('li');
       li.className = 'item';
 
@@ -195,8 +272,23 @@ $<HTMLFormElement>('settings-form').addEventListener('submit', async (e) => {
   }
 });
 
-searchInput.addEventListener('input', renderList);
-$('refresh').addEventListener('click', () => loadSuggestions().catch(() => {}));
+let searchTimer: number | undefined;
+searchInput.addEventListener('input', () => {
+  window.clearTimeout(searchTimer);
+  searchTimer = window.setTimeout(renderList, 150);
+});
+$('refresh').addEventListener('click', () => Promise.all([loadSuggestions(), loadStats()]).catch(() => {}));
+
+$('reset-visits').addEventListener('click', async () => {
+  const question = 'Tüm ziyaret sayaçları sıfırlansın mı? Öneriler silinmez.\n\nStant öncesi test ziyaretlerini temizlemek için kullanın.';
+  if (!confirm(question)) return;
+  try {
+    await api('/api/admin/visits', { method: 'DELETE' });
+    await loadStats();
+  } catch (err) {
+    alert(err instanceof Error ? err.message : 'Sıfırlanamadı.');
+  }
+});
 
 // ── Başlangıç ───────────────────────────────────────────────────────
 

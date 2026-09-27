@@ -76,6 +76,41 @@ main {
   text-decoration: none;
 }
 
+.topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.lang-switch {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(10, 10, 12, 0.7);
+}
+
+.lang-switch button {
+  min-width: 38px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: 600 12px/1 var(--font-body);
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.lang-switch button[aria-pressed='true'] {
+  background: var(--gold);
+  color: #1b1408;
+}
+
 .counter {
   margin: 0;
   color: var(--muted);

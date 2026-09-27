@@ -1,29 +1,32 @@
 import type { NextFunction, Request, Response } from 'express';
 
-/** Basit, bellek içi, IP başına kayan pencere sınırlayıcı. Tek sunucu için yeterli. */
+/**
+ * Bellek içi, IP başına sabit pencereli sınırlayıcı. Her istek O(1): IP başına yalnızca bir sayaç
+ * ve pencere başlangıcı tutulur, yani saldırı altında bile istek başı maliyet sabit kalır.
+ * Tek sunucu için yeterli; birden fazla sunucuya geçilirse Redis gibi ortak bir depo gerekir.
+ */
 export function rateLimit({ windowMs, max, message }: { windowMs: number; max: number; message: string }) {
-  const hits = new Map<string, number[]>();
+  const hits = new Map<string, { start: number; count: number }>();
 
   setInterval(() => {
-    const cutoff = Date.now() - windowMs;
-    for (const [key, times] of hits) {
-      const fresh = times.filter((t) => t > cutoff);
-      if (fresh.length) hits.set(key, fresh);
-      else hits.delete(key);
-    }
+    const now = Date.now();
+    for (const [key, entry] of hits) if (now - entry.start >= windowMs) hits.delete(key);
   }, windowMs).unref();
 
   return (req: Request, res: Response, next: NextFunction) => {
     const key = req.ip ?? 'unknown';
     const now = Date.now();
-    const times = (hits.get(key) ?? []).filter((t) => t > now - windowMs);
-    if (times.length >= max) {
-      res.setHeader('Retry-After', Math.ceil((times[0] + windowMs - now) / 1000));
+    let entry = hits.get(key);
+    if (!entry || now - entry.start >= windowMs) {
+      entry = { start: now, count: 0 };
+      hits.set(key, entry);
+    }
+    if (entry.count >= max) {
+      res.setHeader('Retry-After', Math.ceil((entry.start + windowMs - now) / 1000));
       res.status(429).json({ error: message });
       return;
     }
-    times.push(now);
-    hits.set(key, times);
+    entry.count++;
     next();
   };
 }

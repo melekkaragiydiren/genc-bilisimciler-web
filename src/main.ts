@@ -1,9 +1,13 @@
 import './styles/main.css';
+import { reachSection, startVisit, track } from './analytics';
+import { getLang, initI18n, onLangChange, t, topicLabel } from './i18n';
 import { LIMITS, TOPICS } from './shared/topics';
 import type { CubeScene } from './scene/cube-scene';
 
 const root = document.documentElement;
 root.classList.add('js');
+initI18n();
+startVisit(getLang());
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const panels = [...document.querySelectorAll<HTMLElement>('.panel')];
@@ -59,6 +63,7 @@ window.addEventListener('scroll', () => scene?.setProgress(scrollProgress()), { 
 function setActive(index: number) {
   dots.forEach((d, i) => d.classList.toggle('is-active', i === index));
   counter.textContent = String(index + 1).padStart(2, '0');
+  reachSection(index);
 }
 
 const observer = new IntersectionObserver(
@@ -96,7 +101,8 @@ for (const topic of TOPICS) {
   const chip = document.createElement('button');
   chip.type = 'button';
   chip.className = 'chip';
-  chip.textContent = topic;
+  chip.dataset.topic = topic;
+  chip.textContent = topicLabel(topic);
   chip.setAttribute('aria-pressed', 'false');
   chip.addEventListener('click', () => {
     chip.setAttribute('aria-pressed', String(chip.getAttribute('aria-pressed') !== 'true'));
@@ -108,6 +114,12 @@ for (const topic of TOPICS) {
 message.addEventListener('input', () => {
   count.textContent = String(message.value.length);
   setStatus('');
+});
+
+onLangChange(() => {
+  chipsEl.querySelectorAll<HTMLElement>('.chip').forEach((c) => (c.textContent = topicLabel(c.dataset.topic!)));
+  setStatus('');
+  renderJoin();
 });
 
 function setStatus(text: string, state: 'error' | 'info' = 'info') {
@@ -125,20 +137,20 @@ form.addEventListener('focusout', () => {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const data = new FormData(form);
-  const topics = [...chipsEl.querySelectorAll('[aria-pressed="true"]')].map((c) => c.textContent ?? '');
+  const topics = [...chipsEl.querySelectorAll<HTMLElement>('[aria-pressed="true"]')].map((c) => c.dataset.topic!);
   const text = message.value.trim();
 
   if (topics.length === 0 && text.length < 3) {
-    setStatus('Lütfen bir konu seçin ya da birkaç kelime yazın.', 'error');
+    setStatus(t('form.needInput'), 'error');
     return;
   }
   if (text.length > LIMITS.message) {
-    setStatus(`Mesaj en fazla ${LIMITS.message} karakter olabilir.`, 'error');
+    setStatus(t('form.tooLong', { n: LIMITS.message }), 'error');
     return;
   }
 
   submitBtn.disabled = true;
-  setStatus('Gönderiliyor…');
+  setStatus(t('form.sending'));
   try {
     const res = await fetch('/api/suggestions', {
       method: 'POST',
@@ -150,10 +162,7 @@ form.addEventListener('submit', async (e) => {
         website: String(data.get('website') ?? ''),
       }),
     });
-    if (!res.ok) {
-      const body = (await res.json().catch(() => ({}))) as { error?: string };
-      throw new Error(body.error ?? 'Gönderilemedi, lütfen tekrar deneyin.');
-    }
+    if (!res.ok) throw new Error(t(res.status === 429 ? 'form.rateLimited' : 'form.failed'));
     form.reset();
     chipsEl.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false'));
     count.textContent = '0';
@@ -163,8 +172,9 @@ form.addEventListener('submit', async (e) => {
     root.classList.remove('no-snap');
     (document.activeElement as HTMLElement | null)?.blur();
     scene?.pulse();
+    track('suggest');
   } catch (err) {
-    setStatus(err instanceof Error ? err.message : 'Bağlantı hatası, lütfen tekrar deneyin.', 'error');
+    setStatus(err instanceof Error && err.message ? err.message : t('form.failed'), 'error');
   } finally {
     submitBtn.disabled = false;
   }
@@ -178,17 +188,31 @@ document.getElementById('suggest-again')!.addEventListener('click', () => {
 
 // ── Üyelik bağlantısı (admin panelinden ayarlanır) ──────────────────
 
+const joinLink = document.getElementById('join-link') as HTMLAnchorElement;
+const joinNote = document.getElementById('join-note')!;
+let membershipUrl = '';
+
+function renderJoin() {
+  if (membershipUrl) {
+    joinLink.href = membershipUrl;
+    joinLink.target = '_blank';
+    joinLink.rel = 'noopener';
+    joinLink.removeAttribute('aria-disabled');
+  }
+  joinLink.textContent = t(membershipUrl ? 'join.open' : 'join.soon');
+  joinNote.textContent = t(membershipUrl ? 'join.openNote' : 'join.soonNote');
+}
+
+renderJoin();
+joinLink.addEventListener('click', () => membershipUrl && track('join'));
+document.querySelectorAll<HTMLAnchorElement>('[data-track]').forEach((a) => {
+  a.addEventListener('click', () => track(a.dataset.track as 'linkedin' | 'instagram'));
+});
+
 fetch('/api/config')
   .then((r) => (r.ok ? r.json() : null))
   .then((config: { membershipUrl?: string } | null) => {
-    const url = config?.membershipUrl;
-    if (!url) return;
-    const link = document.getElementById('join-link') as HTMLAnchorElement;
-    link.href = url;
-    link.target = '_blank';
-    link.rel = 'noopener';
-    link.textContent = 'Üye Ol';
-    link.removeAttribute('aria-disabled');
-    document.getElementById('join-note')!.textContent = 'Form yeni sekmede açılır.';
+    membershipUrl = config?.membershipUrl ?? '';
+    renderJoin();
   })
   .catch(() => {});

@@ -35,22 +35,97 @@
       </section>
 
       <!-- Panel -->
-      <section id="dash-view" hidden>
-        <div class="grid">
-          <article class="panel stat">
-            <p class="stat__label">Toplam öneri</p>
-            <p class="stat__value" id="stat-total">0</p>
-            <p class="stat__sub" id="stat-today">Bugün 0</p>
-          </article>
+      <div id="dash-view" hidden>
+        <!-- Ziyaretçiler -->
+        <section class="block">
+          <div class="block__head">
+            <h2>Ziyaretçiler</h2>
+            <button type="button" class="btn btn--ghost btn--sm" id="reset-visits">Sayaçları sıfırla</button>
+          </div>
+          <p class="muted block__intro">
+            Kişisel veri tutulmaz: IP, çerez veya isim yok. Her tarayıcı sekmesi bir ziyaret sayılır.
+            QR ile geleni ayırmak için QR kod adresi <code>?k=qr</code> ile bitmeli.
+          </p>
 
-          <article class="panel topics">
-            <h2>En çok istenen konular</h2>
-            <ol id="topic-bars" class="bars"></ol>
-            <p id="topic-empty" class="muted">Henüz konu seçimi yok.</p>
-          </article>
+          <div class="tiles">
+            <article class="panel stat">
+              <p class="stat__label">Toplam ziyaret</p>
+              <p class="stat__value" id="v-total">0</p>
+              <p class="stat__sub" id="v-today">Bugün 0</p>
+            </article>
+            <article class="panel stat">
+              <p class="stat__label">QR okutarak gelen</p>
+              <p class="stat__value" id="v-qr">0</p>
+              <p class="stat__sub" id="v-qr-share">—</p>
+            </article>
+            <article class="panel stat">
+              <p class="stat__label">Sona kadar kaydıran</p>
+              <p class="stat__value" id="v-complete">0</p>
+              <p class="stat__sub" id="v-complete-share">—</p>
+            </article>
+            <article class="panel stat">
+              <p class="stat__label">Telefondan gelen</p>
+              <p class="stat__value" id="v-mobile">0</p>
+              <p class="stat__sub" id="v-mobile-share">—</p>
+            </article>
+          </div>
 
-          <article class="panel settings">
-            <h2>Üyelik bağlantısı</h2>
+          <div class="grid">
+            <article class="panel">
+              <h3>Kaydırma hunisi</h3>
+              <p class="muted small">Her bölüme ulaşan ziyaretçi sayısı ve toplam ziyarete oranı</p>
+              <ol id="funnel" class="bars bars--wide"></ol>
+            </article>
+            <article class="panel">
+              <h3>Tıklamalar</h3>
+              <p class="muted small">Bu eylemi en az bir kez yapan ziyaretçi</p>
+              <ol id="clicks" class="bars"></ol>
+              <dl class="facts">
+                <div><dt>Dil</dt><dd id="v-lang">—</dd></div>
+                <div><dt>Kaynak</dt><dd id="v-sources">—</dd></div>
+              </dl>
+            </article>
+          </div>
+        </section>
+
+        <!-- Öneriler -->
+        <section class="block">
+          <div class="block__head">
+            <h2>Öneriler</h2>
+          </div>
+          <div class="grid">
+            <article class="panel stat">
+              <p class="stat__label">Toplam öneri</p>
+              <p class="stat__value" id="stat-total">0</p>
+              <p class="stat__sub" id="stat-today">Bugün 0</p>
+            </article>
+            <article class="panel topics">
+              <h3>En çok istenen konular</h3>
+              <ol id="topic-bars" class="bars"></ol>
+              <p id="topic-empty" class="muted">Henüz konu seçimi yok.</p>
+            </article>
+          </div>
+
+          <div class="list-head">
+            <label class="sr-only" for="search">Önerilerde ara</label>
+            <input id="search" type="search" placeholder="Önerilerde ara…" />
+            <div class="list-tools">
+              <button type="button" class="btn btn--ghost btn--sm" id="refresh">Yenile</button>
+              <a class="btn btn--ghost btn--sm" href="/api/admin/suggestions.csv" download>CSV indir</a>
+            </div>
+          </div>
+          <p id="list-empty" class="muted empty" hidden>Henüz öneri yok. Stand başladığında burada görünecek.</p>
+          <p id="list-more" class="muted list-more" hidden></p>
+          <ul id="list" class="list"></ul>
+        </section>
+
+        <!-- Ayarlar -->
+        <section class="block">
+          <div class="block__head">
+            <h2>Ayarlar</h2>
+          </div>
+          <article class="panel">
+            <h3>Üyelik bağlantısı</h3>
             <p class="muted">Sitenin son sayfasındaki “Üye Ol” butonu bu adrese gider. Boş bırakılırsa “çok yakında” yazar.</p>
             <form id="settings-form" class="inline-form">
               <label class="sr-only" for="membership-url">Üyelik formu adresi</label>
@@ -59,20 +134,8 @@
             </form>
             <p id="settings-status" class="status" role="status"></p>
           </article>
-        </div>
-
-        <div class="list-head">
-          <h2>Öneriler</h2>
-          <div class="list-tools">
-            <label class="sr-only" for="search">Önerilerde ara</label>
-            <input id="search" type="search" placeholder="Ara…" />
-            <button type="button" class="btn btn--ghost btn--sm" id="refresh">Yenile</button>
-            <a class="btn btn--ghost btn--sm" href="/api/admin/suggestions.csv" download>CSV indir</a>
-          </div>
-        </div>
-        <p id="list-empty" class="muted empty" hidden>Henüz öneri yok. Stand başladığında burada görünecek.</p>
-        <ul id="list" class="list"></ul>
-      </section>
+        </section>
+      </div>
     </main>
   </body>
 </html>
