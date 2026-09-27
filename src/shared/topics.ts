@@ -5,7 +5,6 @@ export const TOPICS = [
   'Hackathon',
   'Yazılım Atölyesi',
   'Robotik & IoT',
-  'Oyun Geliştirme',
   'Sektörden Konuşmacı',
   'Kariyer & Staj',
   'Teknik Gezi',
