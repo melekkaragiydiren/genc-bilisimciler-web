@@ -1,4 +1,5 @@
 import './styles/admin.css';
+import { buildQrUrl, qrPngDataUrl, qrSvg, reachabilityWarning } from './qr';
 
 type Suggestion = {
   id: number;
@@ -289,6 +290,72 @@ $('reset-visits').addEventListener('click', async () => {
     alert(err instanceof Error ? err.message : 'Sıfırlanamadı.');
   }
 });
+
+// ── QR kod ve afiş ──────────────────────────────────────────────────
+
+const QR_BASE_KEY = 'gbt-qr-base';
+const qrBase = $<HTMLInputElement>('qr-base');
+const qrSource = $<HTMLInputElement>('qr-source');
+const qrButtons = ['qr-poster', 'qr-png', 'qr-svg'].map((id) => $<HTMLButtonElement>(id));
+let qrUrl: string | null = null;
+
+try {
+  qrBase.value = localStorage.getItem(QR_BASE_KEY) ?? location.origin;
+} catch {
+  qrBase.value = location.origin;
+}
+
+async function renderQr() {
+  // Sunucu yalnızca küçük harf, rakam ve tire kabul eder
+  const source = qrSource.value
+    .toLocaleLowerCase('tr')
+    .replace(/[çğıöşü]/g, (c) => ({ ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u' })[c]!)
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .slice(0, 24);
+  if (source !== qrSource.value) qrSource.value = source;
+  const url = buildQrUrl(qrBase.value, source);
+  qrUrl = url;
+
+  $('qr-url').textContent = url ?? 'Geçerli bir adres girin (https://…)';
+  const warning = url ? reachabilityWarning(url) : null;
+  $('qr-warning').hidden = !warning;
+  $('qr-warning').textContent = warning ?? '';
+  qrButtons.forEach((b) => (b.disabled = !url));
+  try {
+    localStorage.setItem(QR_BASE_KEY, qrBase.value);
+  } catch {
+    /* önemli değil */
+  }
+
+  const svg = url ? await qrSvg(url) : '';
+  if (url === qrUrl) $('qr-preview').innerHTML = svg; // yazarken eski sonuç yenisini ezmesin
+}
+
+function download(href: string, filename: string) {
+  const a = Object.assign(document.createElement('a'), { href, download: filename });
+  document.body.append(a);
+  a.click();
+  a.remove();
+}
+
+const qrFileName = () => `gbt-qr-${qrSource.value || 'site'}`;
+
+qrBase.addEventListener('input', renderQr);
+qrSource.addEventListener('input', renderQr);
+$('qr-png').addEventListener('click', async () => {
+  if (qrUrl) download(await qrPngDataUrl(qrUrl), `${qrFileName()}.png`);
+});
+$('qr-svg').addEventListener('click', async () => {
+  if (!qrUrl) return;
+  const blobUrl = URL.createObjectURL(new Blob([await qrSvg(qrUrl)], { type: 'image/svg+xml' }));
+  download(blobUrl, `${qrFileName()}.svg`);
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+});
+$('qr-poster').addEventListener('click', () => {
+  if (qrUrl) window.open(`/admin/afis.html?u=${encodeURIComponent(qrUrl)}`, '_blank', 'noopener');
+});
+renderQr();
 
 // ── Başlangıç ───────────────────────────────────────────────────────
 

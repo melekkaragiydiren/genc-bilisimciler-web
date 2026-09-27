@@ -119,6 +119,39 @@
           <ul id="list" class="list"></ul>
         </section>
 
+        <!-- QR kod ve afiş -->
+        <section class="block">
+          <div class="block__head">
+            <h2>QR kod ve stant afişi</h2>
+          </div>
+          <article class="panel qr">
+            <div class="qr__form">
+              <label for="qr-base">Site adresi</label>
+              <input id="qr-base" type="url" inputmode="url" spellcheck="false" />
+              <p class="muted small">
+                Panel hangi adresten açıldıysa o gelir. Domain gelince paneli domain üzerinden açmanız yeterli.
+              </p>
+
+              <label for="qr-source">Kaynak etiketi</label>
+              <input id="qr-source" type="text" value="qr" maxlength="24" spellcheck="false" />
+              <p class="muted small">
+                Ziyaretçiler bölümünde “Kaynak” satırında bu adla sayılır. Stant afişi için <code>qr</code> bırakın;
+                farklı yerler için ayrı etiket verin (ör. <code>brosur</code>, <code>sunum</code>).
+              </p>
+
+              <p class="qr__url">QR’ın açacağı adres: <code id="qr-url"></code></p>
+              <p id="qr-warning" class="qr__warning" role="status" hidden></p>
+
+              <div class="qr__actions">
+                <button type="button" class="btn btn--gold btn--sm" id="qr-poster">A4 afişi aç ve yazdır</button>
+                <button type="button" class="btn btn--ghost btn--sm" id="qr-png">QR indir (PNG)</button>
+                <button type="button" class="btn btn--ghost btn--sm" id="qr-svg">QR indir (SVG)</button>
+              </div>
+            </div>
+            <div class="qr__preview" id="qr-preview" aria-label="QR kod önizlemesi" role="img"></div>
+          </article>
+        </section>
+
         <!-- Ayarlar -->
         <section class="block">
           <div class="block__head">

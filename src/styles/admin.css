@@ -291,6 +291,60 @@ label {
   color: var(--danger);
 }
 
+/* ── QR kod ───────────────────────────────────────────────────────── */
+
+.qr {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 28px;
+  align-items: start;
+}
+
+.qr__form label:first-child {
+  margin-top: 0;
+}
+
+.qr__form .small {
+  margin: 6px 0 0;
+}
+
+.qr__url {
+  margin: 20px 0 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.qr__warning {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 196, 102, 0.4);
+  border-radius: 10px;
+  background: rgba(255, 196, 102, 0.08);
+  color: #ffd58a;
+  font-size: 14px;
+}
+
+.qr__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.qr__preview {
+  aspect-ratio: 1;
+  padding: 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.qr__preview svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 /* ── Liste ──────────────────────────────────────────────────────── */
 
 .list-head {
@@ -402,6 +456,16 @@ label {
 }
 
 @media (max-width: 700px) {
+  .qr {
+    grid-template-columns: 1fr;
+  }
+
+  .qr__preview {
+    width: min(240px, 100%);
+    margin: 0 auto;
+    grid-row: 1;
+  }
+
   .grid,
   .grid:has(> .stat) {
     grid-template-columns: 1fr;

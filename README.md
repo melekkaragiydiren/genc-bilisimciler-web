@@ -51,13 +51,27 @@ npm start                # http://localhost:3001 (site + API tek sunucuda)
 - **Üyelik bağlantısı:** son sayfadaki "Üye Ol" butonunun adresi buradan girilir,
   yeniden yayına gerek yoktur. Boşken buton "çok yakında" gösterir.
 
+### QR kod ve stant afişi
+
+Admin panelinde "QR kod ve stant afişi" bölümü:
+
+- **Site adresi** panelin açıldığı adresten otomatik gelir. Domain gelince paneli domain üzerinden açmak yeterli.
+  Adres `localhost` ya da yerel ağ adresiyse telefonların açamayacağı konusunda uyarır.
+- **Kaynak etiketi** (varsayılan `qr`): farklı yerlere farklı QR basıp hangisinin işe yaradığını görmek için
+  (`brosur`, `sunum`…). Ziyaretçiler bölümünde "Kaynak" satırında ayrı sayılır.
+- **A4 afişi aç ve yazdır:** küp görseli, "Hoş geldiniz", QR kod, 3 adım ve sosyal medya hesaplarıyla
+  hazır afiş. Yazdırma ekranında kağıt A4, kenar boşluğu "Yok", "Arka plan grafikleri" açık olmalı.
+  "PDF olarak kaydet" ile matbaaya da gönderilebilir.
+- **QR indir (PNG / SVG):** başka tasarımlarda (sunum slaytı, broşür) kullanmak için. SVG her boyutta keskindir.
+
 ### Ziyaretçi sayacı ve QR kod
 
 Kişisel veri tutulmaz: IP, çerez, isim veya cihaz parmak izi yok. Her tarayıcı sekmesine rastgele bir
 kimlik verilir ve sekme kapanınca silinir; sayfa yenilemek yeni ziyaret sayılmaz. Otomasyon araçları sayılmaz.
 
 **QR kodun adresi `?k=qr` ile bitmeli**, örn. `https://alanadi.edu.tr/?k=qr`. Böylece admin panelinde
-"QR okutarak gelen" ayrı sayılır. Parametre adres çubuğundan hemen silinir; link başkasına iletilirse
+"QR okutarak gelen" ayrı sayılır. Bunu elle yapmayın: admin panelindeki **QR kod ve stant afişi** bölümü
+doğru adresi kendisi üretir. Parametre adres çubuğundan hemen silinir; link başkasına iletilirse
 o ziyaret QR sayılmaz. Farklı yerler için farklı kod kullanılabilir (`?k=afis`, `?k=instagram`…),
 panelde "Kaynak" satırında ayrı görünür.
 
@@ -90,9 +104,15 @@ Proxy arkasında `TRUST_PROXY=1` olmalı (rate limit gerçek IP'yi görsün, çe
 ## Güvenlik notları
 
 - Admin oturumu HMAC imzalı, `HttpOnly` + `SameSite=Strict` çerez; 12 saat geçerli.
-- Giriş denemeleri IP başına 15 dakikada 10 ile sınırlı; öneri gönderimi 10 dakikada 40
-  (stantta herkes aynı kampüs Wi-Fi'ından gelebildiği için cömert tutuldu; `.env`'den
-  `RATE_LIMIT_SUGGESTIONS` ile değiştirilebilir).
+- Giriş denemeleri IP başına 15 dakikada 10 ile sınırlı.
+- **Öneri limiti cihaz başınadır** (10 dakikada 5), çünkü okul Wi-Fi'ında yüzlerce kişi tek IP'yi paylaşır.
+  IP başına limit yalnızca sele karşı yüksek bir tavandır (300). Cihaz kimliği rastgeledir, yalnızca bu limit
+  için kullanılır ve veritabanına yazılmaz. Test: aynı IP'den aynı anda 200 farklı telefon → 200'ü de kaydedildi.
+- Aynı IP'den birebir aynı uzun metin (20+ karakter) 10 dakika içinde tekrar gelirse sessizce yok sayılır
+  (kopyala-yapıştır spam). Kısa ortak ifadelere dokunulmaz.
+- Limitler `.env`'den değiştirilebilir (`RATE_LIMIT_*`).
+- Bilinen sınır: çok sayıda farklı IP'den gelen organize saldırıyı bu önlemler durduramaz. Domain gelince
+  Cloudflare arkasına alıp gerekirse Cloudflare Turnstile (görünmez, ücretsiz bot doğrulama) eklenmeli.
 - Bot tuzağı (gizli alan), uzunluk sınırları, konu listesi sunucuda doğrulanır.
 - CSP ve güvenlik başlıkları; CSV'de Excel formül enjeksiyonu engellenir.
 
@@ -131,6 +151,8 @@ admin/index.html      admin paneli
 src/main.ts           kaydırma, form, üyelik bağlantısı
 src/i18n.ts           TR/EN dil desteği
 src/analytics.ts      kişisel veri tutmayan ziyaret sayacı
+src/device-id.ts      cihaz başına limit için rastgele kimlik
+src/qr.ts, poster.ts  QR üretimi ve A4 stant afişi (admin/afis.html)
 src/admin.ts          admin paneli mantığı
 src/scene/            3D küp sahnesi + prosedürel devre dokusu
 src/shared/topics.ts  site ve sunucunun ortak konu listesi
