@@ -1,0 +1,342 @@
+@import './tokens.css';
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(216, 179, 111, 0.12), transparent),
+    var(--bg);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(12px, env(safe-area-inset-top)) var(--gutter) 12px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(6, 7, 8, 0.85);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gold-light);
+  font: 700 17px/1 var(--font-display);
+  letter-spacing: 0.12em;
+  text-decoration: none;
+}
+
+.logo small {
+  margin-left: 6px;
+  color: var(--muted);
+  font: 500 12px/1 var(--font-body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.wrap {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  padding: 28px 16px 64px;
+}
+
+.btn--sm {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.panel {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-solid);
+}
+
+h1,
+h2 {
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 22px;
+}
+
+h2 {
+  font-size: 16px;
+}
+
+.muted {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+label {
+  display: block;
+  margin: 18px 0 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ── Giriş ──────────────────────────────────────────────────────── */
+
+.login {
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+}
+
+.login form {
+  width: min(380px, 100%);
+}
+
+.login .btn {
+  width: 100%;
+  margin-top: 18px;
+}
+
+.error {
+  min-height: 1.4em;
+  margin: 12px 0 0;
+  color: var(--danger);
+  font-size: 14px;
+}
+
+/* ── Özet kartları ──────────────────────────────────────────────── */
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.6fr) 1.4fr;
+  gap: 14px;
+}
+
+.settings {
+  grid-column: 1 / -1;
+}
+
+.stat__label {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.stat__value {
+  margin: 6px 0 2px;
+  color: var(--ink);
+  font: 700 52px/1 var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Konu dağılımı: tek seri, tek renk, sıralı yatay çubuklar */
+.bars {
+  display: grid;
+  gap: 10px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bars li {
+  display: grid;
+  grid-template-columns: minmax(110px, 170px) 1fr 32px;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.bars .name {
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bars .track {
+  height: 12px;
+  border-radius: 4px;
+  background: rgba(243, 237, 226, 0.06);
+}
+
+.bars .fill {
+  height: 100%;
+  min-width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--gold);
+}
+
+.bars .value {
+  color: var(--ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.inline-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.inline-form input {
+  flex: 1;
+}
+
+.status {
+  min-height: 1.4em;
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--success);
+}
+
+.status[data-state='error'] {
+  color: var(--danger);
+}
+
+/* ── Liste ──────────────────────────────────────────────────────── */
+
+.list-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 36px 0 14px;
+}
+
+.list-head h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.list-tools {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.list-tools input {
+  width: 200px;
+  min-height: 40px;
+  padding: 8px 12px;
+}
+
+.list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-solid);
+}
+
+.item__meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.item__meta b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.item__topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item__topics li {
+  padding: 3px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--gold-light);
+  font-size: 12px;
+}
+
+.item__message {
+  grid-column: 1 / -1;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.item__delete {
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  font: 500 13px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.item__delete:hover {
+  border-color: rgba(255, 138, 122, 0.4);
+  color: var(--danger);
+}
+
+.empty {
+  padding: 40px 0;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bars li {
+    grid-template-columns: 100px 1fr 28px;
+  }
+
+  .inline-form {
+    flex-direction: column;
+  }
+
+  .list-tools,
+  .list-tools input {
+    width: 100%;
+  }
+
+  .list-tools input {
+    flex: 1 1 100%;
+  }
+}

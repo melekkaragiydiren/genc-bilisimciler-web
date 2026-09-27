@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#060708" />
+    <title>Genç Bilişimciler Topluluğu</title>
+    <meta name="description" content="Üreten, araştıran ve paylaşan gençlerin bilişim topluluğu. Bizi tanıyın, fikrinizi paylaşın, aramıza katılın." />
+    <meta property="og:title" content="Genç Bilişimciler Topluluğu" />
+    <meta property="og:description" content="Bizimle birlikte geleceğe iz bırakmaya hazır mısınız?" />
+    <meta property="og:image" content="/og.jpg" />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="brand-mark" href="#hosgeldiniz" aria-label="Başa dön">
+        <img src="/favicon.svg" alt="" width="28" height="28" />
+        <span>GBT</span>
+      </a>
+      <p class="counter" aria-hidden="true"><span id="counter-current">01</span> / 06</p>
+    </header>
+
+    <nav class="dots" aria-label="Bölümler">
+      <a href="#hosgeldiniz" aria-label="Hoş geldiniz"></a>
+      <a href="#stand" aria-label="Standımız"></a>
+      <a href="#biz-kimiz" aria-label="Biz kimiz?"></a>
+      <a href="#misyon-vizyon" aria-label="Misyon ve vizyon"></a>
+      <a href="#oneriler" aria-label="Önerileriniz"></a>
+      <a href="#uye-ol" aria-label="Üye ol"></a>
+    </nav>
+
+    <main>
+      <!-- 1 · Hoş geldiniz -->
+      <section class="panel panel--left panel--cube-top" id="hosgeldiniz">
+        <div class="panel__content">
+          <p class="eyebrow" data-reveal>v1.0 — 2026</p>
+          <h1 class="brand-title" data-reveal style="--d: 1">
+            <span>Genç</span>
+            <span>Bilişimciler</span>
+            <span>Topluluğu’na</span>
+          </h1>
+          <p class="welcome" data-reveal style="--d: 2">Hoş geldiniz.</p>
+          <p class="lead" data-reveal style="--d: 3">
+            Üreten, araştıran ve paylaşan gençlerin buluşma noktası. Küpün içinde neler olduğunu görmek için kaydırın.
+          </p>
+        </div>
+        <a class="scroll-hint" href="#stand" aria-label="Sonraki bölüm">
+          <span>Kaydırın</span>
+          <i aria-hidden="true"></i>
+        </a>
+      </section>
+
+      <!-- 2 · Stand -->
+      <section class="panel panel--right panel--cube-top" id="stand">
+        <div class="panel__content">
+          <p class="eyebrow" data-reveal><span class="live-dot" aria-hidden="true"></span> Şu an buradasınız</p>
+          <h2 class="title" data-reveal style="--d: 1">Şu anda standımızdasınız</h2>
+          <p class="lead" data-reveal style="--d: 2">
+            QR kodu okuttuğunuz an topluluğumuzun kapısından içeri adım attınız. Bu kısa yolculukta:
+          </p>
+          <ol class="steps">
+            <li data-reveal style="--d: 3">
+              <b>Bizi tanıyın</b>
+              <span>Kim olduğumuzu ve neden var olduğumuzu okuyun.</span>
+            </li>
+            <li data-reveal style="--d: 4">
+              <b>Fikrinizi söyleyin</b>
+              <span>Bir sonraki etkinlikte ne görmek istediğinizi yazın.</span>
+            </li>
+            <li data-reveal style="--d: 5">
+              <b>Aramıza katılın</b>
+              <span>Geleceğe birlikte iz bırakalım.</span>
+            </li>
+          </ol>
+          <p class="note" data-reveal style="--d: 6">Bir sorunuz mu var? Standdaki ekip arkadaşlarımıza çekinmeden sorun.</p>
+        </div>
+      </section>
+
+      <!-- 3 · Biz kimiz? -->
+      <section class="panel panel--center" id="biz-kimiz">
+        <div class="panel__content">
+          <p class="eyebrow" data-reveal>Küpün içine giriyoruz</p>
+          <h2 class="title title--huge" data-reveal style="--d: 1">Biz kimiz?</h2>
+          <p class="lead lead--center" data-reveal style="--d: 2">
+            Misyonumuz ne, vizyonumuz nereye bakıyor?<br />Cevabı bir kaydırma ötede.
+          </p>
+        </div>
+      </section>
+
+      <!-- 4 · Misyon & Vizyon -->
+      <section class="panel panel--center panel--tall" id="misyon-vizyon">
+        <div class="panel__content panel__content--wide">
+          <p class="eyebrow" data-reveal>Biz kimiz?</p>
+          <p class="statement" data-reveal style="--d: 1">
+            Bilişim ve teknolojiye tutkuyla bağlı; <em>öğrenen, üreten ve paylaşan</em> öğrencilerin topluluğuyuz.
+          </p>
+          <div class="cards">
+            <article class="card" data-reveal style="--d: 2">
+              <h3>Misyonumuz</h3>
+              <p>
+                Öğrencilerin akademik, teknik ve kişisel gelişimini desteklemek; teorik bilgiyi uygulamalı projeler,
+                araştırmalar ve sektör odaklı çalışmalarla pekiştirmek.
+              </p>
+            </article>
+            <article class="card" data-reveal style="--d: 3">
+              <h3>Vizyonumuz</h3>
+              <p>
+                Yalnızca etkinlik düzenleyen değil; üreten, araştıran, yenilik geliştiren ve bilişim ekosistemine değer
+                katan sürdürülebilir bir topluluk olmak.
+              </p>
+            </article>
+            <article class="card" data-reveal style="--d: 4">
+              <h3>Size kazandırdıklarımız</h3>
+              <p>
+                Takım çalışması, liderlik, proje yönetimi ve girişimcilik deneyimi; şirketler, kamu kurumları,
+                teknoparklar ve üniversitelerle kurduğumuz iş birlikleriyle sektörle buluşma fırsatı.
+              </p>
+            </article>
+          </div>
+          <div class="fields" data-reveal style="--d: 5">
+            <h3>Çalışma alanlarımız</h3>
+            <ul class="tags">
+              <li>Yapay Zekâ</li>
+              <li>Yazılım Geliştirme</li>
+              <li>Siber Güvenlik</li>
+              <li>Veri Bilimi</li>
+              <li>Bulut Bilişim</li>
+              <li>Sanal Gerçeklik</li>
+              <li>Otonom Sistemler</li>
+              <li>Nesnelerin İnterneti</li>
+              <li>Mobil Uygulama</li>
+              <li>Web Teknolojileri</li>
+              <li>Robotik</li>
+              <li>Dijital Tasarım</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5 · Öneriler -->
+      <section class="panel panel--left panel--form" id="oneriler">
+        <div class="panel__content">
+          <p class="eyebrow" data-reveal>Söz sizde</p>
+          <h2 class="title" data-reveal style="--d: 1">Bir sonraki etkinliğimizde neler görmek istersiniz?</h2>
+
+          <form id="suggest-form" class="card form" data-reveal style="--d: 2" novalidate>
+            <fieldset>
+              <legend>Hızlıca seçin</legend>
+              <div class="chips" id="topic-chips"></div>
+            </fieldset>
+
+            <label for="s-message">Ya da kendi cümlelerinizle yazın</label>
+            <textarea
+              id="s-message"
+              name="message"
+              rows="3"
+              maxlength="1000"
+              placeholder="Örn. Yapay zekâ ile oyun geliştirme atölyesi…"
+            ></textarea>
+            <p class="counter-inline"><span id="s-count">0</span> / 1000</p>
+
+            <label for="s-name">Adınız <span class="optional">(isteğe bağlı)</span></label>
+            <input id="s-name" name="name" type="text" maxlength="60" autocomplete="given-name" />
+
+            <div class="hp" aria-hidden="true">
+              <label>Web sitesi <input name="website" type="text" tabindex="-1" autocomplete="off" /></label>
+            </div>
+
+            <button type="submit" class="btn btn--gold">Gönder</button>
+            <p class="form-note">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5z" /></svg>
+              Yazdıklarınızı yalnızca topluluk yöneticileri görür.
+            </p>
+            <p id="s-status" class="form-status" role="status" aria-live="polite"></p>
+          </form>
+
+          <div id="suggest-thanks" class="card thanks" hidden>
+            <h3 class="thanks__title">Teşekkürler!</h3>
+            <p>Fikriniz bize ulaştı. Bir sonraki etkinliği birlikte şekillendiriyoruz.</p>
+            <button type="button" class="btn btn--ghost" id="suggest-again">Bir fikir daha ekle</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6 · Üye ol -->
+      <section class="panel panel--center panel--bottom" id="uye-ol">
+        <div class="panel__content">
+          <p class="eyebrow" data-reveal>Son adım</p>
+          <h2 class="title" data-reveal style="--d: 1">Bizimle birlikte geleceğe iz bırakmaya hazır mısınız?</h2>
+          <p class="lead lead--center" data-reveal style="--d: 2">
+            Projelerde yer alın, etkinlikleri birlikte tasarlayın, teknoloji dünyasında aktif rol alın.
+          </p>
+          <div class="cta" data-reveal style="--d: 3">
+            <a id="join-link" class="btn btn--gold btn--big" aria-disabled="true">Üyelik formu çok yakında</a>
+            <p id="join-note" class="note">Şimdilik standdaki ekibimize adınızı bırakabilirsiniz.</p>
+          </div>
+          <footer class="footer" data-reveal style="--d: 4">
+            <span>© 2026 Genç Bilişimciler Topluluğu</span>
+            <a href="#hosgeldiniz">Başa dön ↑</a>
+          </footer>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

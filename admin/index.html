@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#060708" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>GBT Yönetim</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script type="module" src="/src/admin.ts"></script>
+  </head>
+  <body>
+    <header class="bar">
+      <a class="logo" href="/">
+        <img src="/favicon.svg" alt="" width="26" height="26" />
+        <span>GBT <small>Yönetim</small></span>
+      </a>
+      <button type="button" class="btn btn--ghost btn--sm" id="logout" hidden>Çıkış</button>
+    </header>
+
+    <main class="wrap">
+      <!-- Giriş -->
+      <section id="login-view" class="login" hidden>
+        <form id="login-form" class="panel">
+          <h1>Admin girişi</h1>
+          <p class="muted">Öneri kayıtlarını yalnızca topluluk yöneticileri görebilir.</p>
+          <label for="password">Şifre</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+          <button type="submit" class="btn btn--gold">Giriş yap</button>
+          <p id="login-error" class="error" role="alert"></p>
+        </form>
+      </section>
+
+      <!-- Panel -->
+      <section id="dash-view" hidden>
+        <div class="grid">
+          <article class="panel stat">
+            <p class="stat__label">Toplam öneri</p>
+            <p class="stat__value" id="stat-total">0</p>
+            <p class="stat__sub" id="stat-today">Bugün 0</p>
+          </article>
+
+          <article class="panel topics">
+            <h2>En çok istenen konular</h2>
+            <ol id="topic-bars" class="bars"></ol>
+            <p id="topic-empty" class="muted">Henüz konu seçimi yok.</p>
+          </article>
+
+          <article class="panel settings">
+            <h2>Üyelik bağlantısı</h2>
+            <p class="muted">Sitenin son sayfasındaki “Üye Ol” butonu bu adrese gider. Boş bırakılırsa “çok yakında” yazar.</p>
+            <form id="settings-form" class="inline-form">
+              <label class="sr-only" for="membership-url">Üyelik formu adresi</label>
+              <input id="membership-url" type="url" inputmode="url" placeholder="https://forms.gle/…" />
+              <button type="submit" class="btn btn--gold btn--sm">Kaydet</button>
+            </form>
+            <p id="settings-status" class="status" role="status"></p>
+          </article>
+        </div>
+
+        <div class="list-head">
+          <h2>Öneriler</h2>
+          <div class="list-tools">
+            <label class="sr-only" for="search">Önerilerde ara</label>
+            <input id="search" type="search" placeholder="Ara…" />
+            <button type="button" class="btn btn--ghost btn--sm" id="refresh">Yenile</button>
+            <a class="btn btn--ghost btn--sm" href="/api/admin/suggestions.csv" download>CSV indir</a>
+          </div>
+        </div>
+        <p id="list-empty" class="muted empty" hidden>Henüz öneri yok. Stand başladığında burada görünecek.</p>
+        <ul id="list" class="list"></ul>
+      </section>
+    </main>
+  </body>
+</html>
